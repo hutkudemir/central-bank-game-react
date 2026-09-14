@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore, regionDefaults } from '../store/gameStore';
 import { translations } from '../data/translations';
-import { X, Mic, Send, ChevronRight, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { X, Mic, Send, ChevronRight, ThumbsUp, ThumbsDown, Volume2, VolumeX, MicOff } from 'lucide-react';
+import { useSpeechRecognition, useSpeechSynthesis } from '../hooks/useSpeech';
 
 interface PressQuestion {
   reporter: string;
@@ -234,11 +235,49 @@ export function PressConferenceModal() {
   const [lastResult, setLastResult] = useState<{ score: number; feedback: string[]; publicReaction: 'positive' | 'mixed' | 'negative' } | null>(null);
   const [totalScore, setTotalScore] = useState(0);
   const [answered, setAnswered] = useState(0);
+  const [autoSpeak, setAutoSpeak] = useState(true);
+
+  // Speech hooks
+  const { isListening, transcript, isSupported: speechRecSupported, startListening, stopListening, setTranscript } = useSpeechRecognition(language);
+  const { isSpeaking, speak, stop: stopSpeaking } = useSpeechSynthesis(language);
+
+  // Auto-speak question when it changes
+  useEffect(() => {
+    if (autoSpeak && questions[currentQ]) {
+      const timer = setTimeout(() => {
+        speak(questions[currentQ].text, questions[currentQ].reporter);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentQ, autoSpeak]);
+
+  // When listening, show transcript in real-time; when stopped, merge into response
+  useEffect(() => {
+    if (isListening && transcript) {
+      // While listening, show the transcript as the live response preview
+      setResponse(prev => {
+        const baseText = prev.replace(/\s*\[speaking...\]$/, '');
+        return baseText + (baseText ? ' ' : '') + transcript.trim() + ' [speaking...]';
+      });
+    } else if (!isListening && transcript) {
+      // When stopped listening, finalize the text
+      setResponse(prev => {
+        const cleaned = prev.replace(/\s*\[speaking...\]$/, '').trim();
+        const spokenText = transcript.trim();
+        if (spokenText && !cleaned.endsWith(spokenText)) {
+          return cleaned + (cleaned ? ' ' : '') + spokenText;
+        }
+        return cleaned;
+      });
+    }
+  }, [isListening, transcript]);
 
   const handleSubmit = () => {
-    if (!response.trim()) return;
+    // Clean up any speaking markers before evaluation
+    const cleanResponse = response.replace(/\s*\[speaking...\]$/, '').trim();
+    if (!cleanResponse) return;
     
-    const evaluation = evaluateResponse(response, questions[currentQ], language, region, infl[month], unemp[month], piStar, uStar);
+    const evaluation = evaluateResponse(cleanResponse, questions[currentQ], language, region, infl[month], unemp[month], piStar, uStar);
     setLastResult(evaluation);
     setTotalScore(prev => prev + evaluation.score);
     setAnswered(prev => prev + 1);
@@ -255,6 +294,9 @@ export function PressConferenceModal() {
 
   const handleNext = () => {
     if (currentQ < questions.length - 1) {
+      stopSpeaking();
+      if (isListening) stopListening();
+      setTranscript('');
       setCurrentQ(prev => prev + 1);
       setResponse('');
       setLastResult(null);
@@ -262,7 +304,24 @@ export function PressConferenceModal() {
   };
 
   const handleClose = () => {
+    stopSpeaking();
+    if (isListening) stopListening();
     setShowPressConference(false);
+  };
+
+  const handleMicToggle = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      setTranscript('');
+      startListening();
+    }
+  };
+
+  const handleReplayQuestion = () => {
+    if (questions[currentQ]) {
+      speak(questions[currentQ].text, questions[currentQ].reporter);
+    }
   };
 
   if (!showPressConference) return null;
@@ -280,7 +339,17 @@ export function PressConferenceModal() {
             <Mic size={20} className="text-purple-400" />
             {t.pressConference}
           </h2>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setAutoSpeak(!autoSpeak)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
+                autoSpeak ? 'bg-purple-600/30 text-purple-300' : 'bg-slate-700 text-slate-400'
+              }`}
+              title={isTr ? 'Soruları otomatik seslendir' : 'Auto-read questions'}
+            >
+              {autoSpeak ? <Volume2 size={14} /> : <VolumeX size={14} />}
+              <span className="hidden sm:inline">{isTr ? 'Otomatik' : 'Auto'}</span>
+            </button>
             <span className="text-xs text-slate-400">
               {currentQ + 1}/{questions.length}
             </span>
@@ -296,12 +365,32 @@ export function PressConferenceModal() {
         {/* Content */}
         <div className="p-4 space-y-4 overflow-y-auto flex-1">
           {/* Question */}
-          <div className="bg-slate-700/30 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-medium text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-full">
-                {question.reporter}
-              </span>
-              <span className="text-xs text-slate-500">{question.media}</span>
+          <div className="bg-slate-700/30 rounded-xl p-4 relative">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-full">
+                  {question.reporter}
+                </span>
+                <span className="text-xs text-slate-500">{question.media}</span>
+                {isSpeaking && (
+                  <span className="flex items-center gap-1 text-xs text-purple-300">
+                    <span className="flex gap-0.5">
+                      <span className="w-0.5 h-2 bg-purple-400 rounded-full animate-pulse" />
+                      <span className="w-0.5 h-3 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }} />
+                      <span className="w-0.5 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                    </span>
+                    {isTr ? 'Konuşuyor...' : 'Speaking...'}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={handleReplayQuestion}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-600/50 hover:bg-slate-600 text-xs text-slate-300 transition-colors"
+                title={isTr ? 'Soruyu tekrar dinle' : 'Replay question'}
+              >
+                <Volume2 size={12} />
+                <span className="hidden sm:inline">{isTr ? 'Dinle' : 'Listen'}</span>
+              </button>
             </div>
             <p className="text-sm text-slate-200 leading-relaxed">
               {question.text}
@@ -311,13 +400,52 @@ export function PressConferenceModal() {
           {/* Response Input */}
           <div>
             <label className="text-xs text-slate-400 mb-1 block">{t.yourResponse}</label>
-            <textarea
-              value={response}
-              onChange={(e) => setResponse(e.target.value)}
-              rows={4}
-              className="w-full bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
-              placeholder={isTr ? 'Yanıtınızı buraya yazın...' : 'Type your response here...'}
-            />
+            <div className="relative">
+              <textarea
+                value={response}
+                onChange={(e) => setResponse(e.target.value)}
+                rows={4}
+                className="w-full bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                placeholder={isTr ? 'Yanıtınızı yazın veya mikrofon ile konuşun...' : 'Type or speak your response...'}
+              />
+              {/* Microphone Button */}
+              {speechRecSupported && (
+                <button
+                  onClick={handleMicToggle}
+                  className={`absolute right-3 bottom-3 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                    isListening
+                      ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse shadow-lg shadow-red-500/50'
+                      : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/30'
+                  }`}
+                  title={isListening 
+                    ? (isTr ? 'Dinlemeyi durdur' : 'Stop listening')
+                    : (isTr ? 'Mikrofon ile konuş' : 'Speak with microphone')
+                  }
+                >
+                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+                </button>
+              )}
+            </div>
+            {/* Listening Indicator */}
+            {isListening && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                <span className="flex gap-0.5">
+                  <span className="w-1 h-3 bg-red-400 rounded-full animate-pulse" />
+                  <span className="w-1 h-4 bg-red-400 rounded-full animate-pulse" style={{ animationDelay: '0.15s' }} />
+                  <span className="w-1 h-3 bg-red-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+                  <span className="w-1 h-5 bg-red-400 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }} />
+                  <span className="w-1 h-3 bg-red-400 rounded-full animate-pulse" style={{ animationDelay: '0.25s' }} />
+                </span>
+                {isTr ? 'Dinliyorum... Konuşun' : 'Listening... Speak now'}
+              </div>
+            )}
+            {!speechRecSupported && (
+              <div className="mt-2 text-xs text-slate-500">
+                {isTr 
+                  ? '⚠️ Tarayıcınız ses tanımayı desteklemiyor. Lütfen Chrome veya Edge kullanın.'
+                  : '⚠️ Your browser does not support speech recognition. Please use Chrome or Edge.'}
+              </div>
+            )}
           </div>
 
           {/* Score Feedback */}
