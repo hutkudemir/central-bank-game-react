@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 
 export function TimeSeriesChart() {
-  const { language, month, infl, unemp, interest, gdpGrowth, piStar, uStar } = useGameStore();
+  const { language, month, infl, unemp, interest, gdpGrowth, inflationExpectations, piStar, uStar } = useGameStore();
   const t = translations[language];
 
   const data = [];
@@ -17,6 +17,7 @@ export function TimeSeriesChart() {
       unemployment: parseFloat(unemp[i].toFixed(2)),
       policyRate: parseFloat(interest[i].toFixed(2)),
       gdpGrowth: parseFloat(gdpGrowth[i].toFixed(2)),
+      expectations: parseFloat(inflationExpectations[i].toFixed(2)),
     });
   }
 
@@ -47,6 +48,7 @@ export function TimeSeriesChart() {
           <ReferenceLine y={piStar} stroke="#ef4444" strokeDasharray="5 5" label={{ value: `${t.inflation} ${t.target}: ${piStar}%`, fill: '#ef4444', fontSize: 10, position: 'right' }} />
           <ReferenceLine y={uStar} stroke="#3b82f6" strokeDasharray="5 5" label={{ value: `${t.unemployment} ${t.target}: ${uStar}%`, fill: '#3b82f6', fontSize: 10, position: 'right' }} />
           <Line type="monotone" dataKey="inflation" stroke="#ef4444" strokeWidth={2.5} dot={false} name={t.inflation} />
+          <Line type="monotone" dataKey="expectations" stroke="#f97316" strokeWidth={2} dot={false} strokeDasharray="3 3" name={language === 'tr' ? 'Beklentiler' : 'Expectations'} />
           <Line type="monotone" dataKey="unemployment" stroke="#3b82f6" strokeWidth={2.5} dot={false} name={t.unemployment} />
           <Line type="monotone" dataKey="policyRate" stroke="#10b981" strokeWidth={2.5} dot={false} name={t.policyRate} />
           <Line type="monotone" dataKey="gdpGrowth" stroke="#f59e0b" strokeWidth={1.5} dot={false} strokeDasharray="5 5" name={t.gdpGrowth} />

@@ -3,7 +3,7 @@ import { translations } from '../data/translations';
 import { Trophy, XCircle, RotateCcw } from 'lucide-react';
 
 export function GameOverModal() {
-  const { language, gameResult, infl, unemp, credibility, month, maxMonths, resetGame } = useGameStore();
+  const { language, gameResult, infl, unemp, credibility, month, maxMonths, resetGame, publicApproval, inflationExpectations, gdpGrowth, region } = useGameStore();
   const t = translations[language];
 
   const isHired = gameResult === t.hired;
@@ -12,6 +12,7 @@ export function GameOverModal() {
   const inflDev = infl.slice(1, month + 1).reduce((s, v) => s + Math.abs(v - 5), 0) / Math.max(1, month);
   const unempDev = unemp.slice(1, month + 1).reduce((s, v) => s + Math.abs(v - 8), 0) / Math.max(1, month);
   const score = Math.max(0, Math.round(100 - (inflDev * 1.5 + unempDev) * 8));
+  const isTr = language === 'tr';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -43,7 +44,7 @@ export function GameOverModal() {
           </div>
           <div className="text-xs text-slate-400">{t.score}</div>
           
-          <div className="grid grid-cols-3 gap-3 mt-4 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 text-center">
             <div>
               <div className="text-lg font-bold text-red-400">{infl[month]?.toFixed(1)}%</div>
               <div className="text-[10px] text-slate-500">{t.inflation}</div>
@@ -55,6 +56,18 @@ export function GameOverModal() {
             <div>
               <div className="text-lg font-bold text-purple-400">{credibility.toFixed(0)}</div>
               <div className="text-[10px] text-slate-500">{t.credibility}</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-orange-400">{inflationExpectations[month]?.toFixed(1)}%</div>
+              <div className="text-[10px] text-slate-500">{isTr ? 'Beklentiler' : 'Expectations'}</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-cyan-400">{publicApproval.toFixed(0)}%</div>
+              <div className="text-[10px] text-slate-500">{isTr ? 'Kamu Onayı' : 'Public Approval'}</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-emerald-400">{gdpGrowth[month]?.toFixed(1)}%</div>
+              <div className="text-[10px] text-slate-500">{t.gdpGrowth}</div>
             </div>
           </div>
         </div>

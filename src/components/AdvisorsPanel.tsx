@@ -7,15 +7,15 @@ export function AdvisorsPanel() {
   const t = translations[language];
 
   const biasColors = {
-    balancer: { bg: 'from-blue-500/10 to-blue-600/5', border: 'border-blue-500/30', badge: 'bg-blue-500/20 text-blue-300', icon: '⚖️' },
-    dove: { bg: 'from-emerald-500/10 to-emerald-600/5', border: 'border-emerald-500/30', badge: 'bg-emerald-500/20 text-emerald-300', icon: '🕊️' },
-    hawk: { bg: 'from-red-500/10 to-red-600/5', border: 'border-red-500/30', badge: 'bg-red-500/20 text-red-300', icon: '🦅' },
+    keynesian: { bg: 'from-blue-500/10 to-blue-600/5', border: 'border-blue-500/30', badge: 'bg-blue-500/20 text-blue-300', icon: '📊' },
+    monetarist: { bg: 'from-red-500/10 to-red-600/5', border: 'border-red-500/30', badge: 'bg-red-500/20 text-red-300', icon: '🏦' },
+    'supply-side': { bg: 'from-emerald-500/10 to-emerald-600/5', border: 'border-emerald-500/30', badge: 'bg-emerald-500/20 text-emerald-300', icon: '🏭' },
   };
 
   const biasLabels = {
-    balancer: language === 'tr' ? 'Dengeli' : 'Balancer',
-    dove: language === 'tr' ? 'Güvercin' : 'Dove',
-    hawk: language === 'tr' ? 'Şahin' : 'Hawk',
+    keynesian: language === 'tr' ? 'Keynesyen' : 'Keynesian',
+    monetarist: language === 'tr' ? 'Monetarist' : 'Monetarist',
+    'supply-side': language === 'tr' ? 'Arz Yanlısı' : 'Supply-Side',
   };
 
   return (
@@ -35,25 +35,38 @@ export function AdvisorsPanel() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{colors.icon}</span>
-                  <h4 className="font-semibold text-sm">{advisor.name}</h4>
+                  <div>
+                    <h4 className="font-semibold text-sm">{advisor.name}</h4>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${colors.badge}`}>
+                      {advisor.philosophy || biasLabels[advisor.bias]}
+                    </span>
+                  </div>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full ${colors.badge}`}>
-                  {biasLabels[advisor.bias]}
-                </span>
               </div>
               
               <div className="mb-3">
                 <div className="text-xs text-slate-400">{t.recommendedRate}</div>
                 <div className="text-xl font-bold text-white">{advisor.rate.toFixed(2)}%</div>
+                {advisor.confidence > 0 && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full"
+                        style={{ width: `${advisor.confidence}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-400">{advisor.confidence}%</span>
+                  </div>
+                )}
               </div>
               
-              <p className="text-xs text-slate-300 mb-3 leading-relaxed line-clamp-4">
-                {advisor.rationale.replace('%.2f', advisor.rate.toFixed(2)).replace('%.1f', advisor.rate.toFixed(1))}
+              <p className="text-xs text-slate-300 mb-3 leading-relaxed line-clamp-6">
+                {advisor.rationale}
               </p>
               
               {advisor.press && (
                 <p className="text-[11px] text-blue-300/70 mb-3 italic line-clamp-2">
-                  {advisor.press.replace('%.2f', advisor.rate.toFixed(2))}
+                  {advisor.press}
                 </p>
               )}
               

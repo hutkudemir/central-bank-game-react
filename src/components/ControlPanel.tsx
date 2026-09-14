@@ -20,9 +20,13 @@ export function ControlPanel() {
   const t = translations[language];
 
 
+  const { inflationExpectations, publicApproval, gdpGrowth } = useGameStore();
+  
   const currentInfl = infl[month];
   const currentUnemp = unemp[month];
   const currentRate = interest[month];
+  const currentExpectations = inflationExpectations[month];
+  const currentGdp = gdpGrowth[month];
   
   const inflDev = currentInfl - piStar;
   const unempDev = currentUnemp - uStar;
@@ -118,6 +122,33 @@ export function ControlPanel() {
             <div className="text-2xl font-bold text-purple-400">{credibility.toFixed(0)}/100</div>
             <div className="text-xs mt-1 text-purple-300">
               {credibility >= 80 ? '🟢' : credibility >= 60 ? '🟡' : '🔴'}
+            </div>
+          </div>
+          <div className="bg-slate-700/30 rounded-xl p-3">
+            <div className="text-xs text-slate-400 mb-1">
+              {language === 'tr' ? 'Enflasyon Beklentileri' : 'Inflation Expectations'}
+            </div>
+            <div className="text-2xl font-bold text-orange-400">{currentExpectations.toFixed(1)}%</div>
+            <div className="text-xs mt-1 text-orange-300">
+              {currentExpectations > piStar + 1 ? '⚠️ Unanchored' : '✅ Anchored'}
+            </div>
+          </div>
+          <div className="bg-slate-700/30 rounded-xl p-3">
+            <div className="text-xs text-slate-400 mb-1">
+              {language === 'tr' ? 'Kamu Onayı' : 'Public Approval'}
+            </div>
+            <div className="text-2xl font-bold text-cyan-400">{publicApproval.toFixed(0)}%</div>
+            <div className="text-xs mt-1 text-cyan-300">
+              {publicApproval >= 70 ? '😊' : publicApproval >= 50 ? '😐' : '😟'}
+            </div>
+          </div>
+          <div className="bg-slate-700/30 rounded-xl p-3">
+            <div className="text-xs text-slate-400 mb-1">{t.gdpGrowth}</div>
+            <div className={`text-2xl font-bold ${currentGdp >= 2 ? 'text-emerald-400' : currentGdp >= 0 ? 'text-amber-400' : 'text-red-400'}`}>
+              {currentGdp.toFixed(1)}%
+            </div>
+            <div className="text-xs mt-1 text-slate-400">
+              {currentGdp >= 3 ? '📈 Strong' : currentGdp >= 2 ? '📊 Stable' : currentGdp >= 0 ? '📉 Weak' : '🔻 Recession'}
             </div>
           </div>
         </div>

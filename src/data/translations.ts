@@ -74,6 +74,10 @@ export const translations: Record<Language, Record<string, string>> = {
     appliedRate: "Applied Rate",
     value: "Value (%)",
     indicators: "Indicators",
+    expectations: "Inflation Expectations",
+    publicApproval: "Public Approval",
+    anchored: "Anchored",
+    unanchored: "Unanchored",
   },
   tr: {
     title: "Merkez Bankası Başkanı",
@@ -148,5 +152,9 @@ export const translations: Record<Language, Record<string, string>> = {
     appliedRate: "Uygulanan Faiz",
     value: "Değer (%)",
     indicators: "Göstergeler",
+    expectations: "Enflasyon Beklentileri",
+    publicApproval: "Kamu Onayı",
+    anchored: "Çıpalanmış",
+    unanchored: "Çıpadan Sapma",
   }
 };
