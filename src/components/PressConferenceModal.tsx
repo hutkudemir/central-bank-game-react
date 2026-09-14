@@ -151,7 +151,7 @@ export function PressConferenceModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full shadow-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <h2 className="text-lg font-bold flex items-center gap-2">
@@ -172,7 +172,7 @@ export function PressConferenceModal() {
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 overflow-y-auto flex-1">
           {/* Question */}
           <div className="bg-slate-700/30 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -223,7 +223,10 @@ export function PressConferenceModal() {
             </div>
           )}
 
-          {/* Actions */}
+        </div>
+
+        {/* Fixed Footer Actions */}
+        <div className="p-4 border-t border-slate-700 flex-shrink-0">
           <div className="flex gap-3">
             {!lastScore ? (
               <button

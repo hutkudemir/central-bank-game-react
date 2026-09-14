@@ -15,7 +15,7 @@ export function GameOverModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-8 shadow-2xl text-center">
+      <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-8 shadow-2xl text-center max-h-[90vh] overflow-y-auto">
         <div className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${
           isHired ? 'bg-emerald-500/20 border-2 border-emerald-500/50' : 'bg-red-500/20 border-2 border-red-500/50'
         }`}>
